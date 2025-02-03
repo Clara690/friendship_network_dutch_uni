@@ -8,6 +8,7 @@ excute:
 ---
 
 ```{r}
+#| echo: false
 # load the necessary libraries
 library(igraph)
 library(dplyr)
@@ -20,16 +21,20 @@ The data comes in the form of an adjacency format. Thus, it is reasonable to kee
 ```{r}
 # data collected at the beginning of the study
 # load the adjacency matrix 
-df <- read.csv('./data/t1.dat.', header = FALSE, sep = '')
+df1 <- read.csv('./data/t1.dat.', header = FALSE, sep = '')
 # attributes 
 atr <- read.csv('./data/cov1.dat', header = FALSE, sep = '')
 
-friendship_t1 <- as.matrix(df)
-diag(friendship_t1) <- NA
+# node_gender <- atr[length(atr), 2] # 1 = male, 2 = female
+node_gender$V1 <- NULL # remove index
+
 ```
 
 ```{r}
+# turn original data frame into a matrix
+friendship_t1 <- as.matrix(df1)
 # turn matrix into a graph
+diag(friendship_t1) <- NA # set the values in diagonal dir to NA 
 grph <- graph_from_adjacency_matrix(friendship_t1)
 
 print(class(grph))
@@ -39,6 +44,22 @@ print(class(grph))
 plot.igraph(grph,
             vertex.label='',vertex.size=4,
             edge.color='darkgrey',edge.arrow.size=.2,
-            layout=layout_with_kk(grph), # other options: layout_nicely, layout_with_fr (<-- this one is furchterman reingold)
-            main='Friendship network')
+            layout=layout_with_kk(grph), 
+            main='Friendship Network at a Dutch University')
+```
+
+```{r}
+# check for duplicates
+length(unique(atr$V1)) == nrow(df1)
+
+```
+
+# Visualization of node attributes
+
+```{r}
+V(grph)$name[1:10]
+```
+
+```{r}
+atr$V1[1:10]
 ```
