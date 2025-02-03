@@ -1,0 +1,44 @@
+---
+title: "freshmen social network"
+author: "Yun-Tsz Tsai"
+format: pdf
+editor: visual
+excute: 
+  echo: false
+---
+
+```{r}
+# load the necessary libraries
+library(igraph)
+library(dplyr)
+```
+
+# Data handling
+
+The data comes in the form of an adjacency format. Thus, it is reasonable to keep its original shape and then turn it into an igraph object.
+
+```{r}
+# data collected at the beginning of the study
+# load the adjacency matrix 
+df <- read.csv('./data/t1.dat.', header = FALSE, sep = '')
+# attributes 
+atr <- read.csv('./data/cov1.dat', header = FALSE, sep = '')
+
+friendship_t1 <- as.matrix(df)
+diag(friendship_t1) <- NA
+```
+
+```{r}
+# turn matrix into a graph
+grph <- graph_from_adjacency_matrix(friendship_t1)
+
+print(class(grph))
+```
+
+```{r}
+plot.igraph(grph,
+            vertex.label='',vertex.size=4,
+            edge.color='darkgrey',edge.arrow.size=.2,
+            layout=layout_with_kk(grph), # other options: layout_nicely, layout_with_fr (<-- this one is furchterman reingold)
+            main='Friendship network')
+```
