@@ -9,6 +9,7 @@ excute:
 
 ```{r}
 #| echo: false
+#| warning: false
 # load the necessary libraries
 library(igraph)
 library(dplyr)
@@ -21,39 +22,80 @@ The data comes in the form of an adjacency format. Thus, it is reasonable to kee
 
 ```{r}
 # data collected at the beginning of the study
-# load the adjacency matrix 
-df1 <- read.csv('./data/t1.dat.', header = FALSE, sep = '')
-# attributes 
-atr <- read.csv('./data/cov1.dat', header = FALSE, sep = '')
-# attached 
-atr$node_id <- colnames(df1)
 
+# load the adjacency matrix 
+df1 <- read.csv('./data/t1.dat', header = FALSE, sep = '')
+df4 <- read.csv('./data/t4.dat.', header = FALSE, sep = '')
+# df1[df1 %in% c(4, 5, 9)] <- 0
+# df4[df4 %in% c(4, 5, 9)] <- 0
+# df4[df4 == 4] <- 0
+# df4[df4 == 9] <- 0
+# converting the label to acual values
+
+# attributes 
+atr <- read.csv('./data/cov1.dat', header = FALSE, sep = '') #attached 
+atr$node_id <- colnames(df1)
 ```
 
 ```{r}
 # turn original data frame into a matrix
 friendship_t1 <- as.matrix(df1)
-# turn matrix into a graph
-diag(friendship_t1) <- NA # set the values in diagonal dir to NA 
-grph <- graph_from_adjacency_matrix(friendship_t1)
+friendship_t4 <- as.matrix(df4)
+friendship_t1[friendship_t1 %in% 1:3] <- 1
+friendship_t4[friendship_t4 %in% 1:3] <- 1
+friendship_t1[friendship_t1 %in% c(4,5,9)] <- 0
+friendship_t4[friendship_t4 %in% c(4,5,9)] <- 0
 
-print(class(grph))
+# turn matrix into a graph
+diag(friendship_t1) <- 0 # set the values in diagonal dir to 0 
+diag(friendship_t4) <- 0
+nl_uni_t1 <- graph_from_adjacency_matrix(friendship_t1)
+# nl_uni_t4 <- graph_from_adjacency_matrix(friendship_t4, weight = TRUE)
+nl_uni_t4 <- graph_from_adjacency_matrix(friendship_t4)
+print(class(nl_uni_t1))
+```
+
+## Network at Time 1
+
+```{r}
+plot.igraph(nl_uni_t1,
+            vertex.label='',vertex.size=4,
+            edge.color='darkgrey',edge.arrow.size=.2,
+            layout=layout_with_kk(nl_uni_t1), 
+            main='Friendship Network at A Dutch University \n
+            Time 1')
 ```
 
 ```{r}
-plot.igraph(grph,
-            vertex.label='',vertex.size=4,
-            edge.color='darkgrey',edge.arrow.size=.2,
-            layout=layout_with_kk(grph), 
-            main='Friendship Network at A Dutch University')
+#| echo: true
+# print(df4[c(11,15,30), 34])
+print(df4[2, 37])
+```
+
+## Network at Time 4
+
+```{r}
+plot.igraph(nl_uni_t4,
+            vertex.label=V(nl_uni_t4)$name,vertex.size=4,
+            edge.color='darkgrey',edge.arrow.size=.1,
+            layout=layout_with_kk(nl_uni_t4),
+            main='Friendship Network at A Dutch University\n
+            Period 4')
+# plot.igraph(nl_uni_t4,
+#             vertex.label='',vertex.size=4,
+#             edge.color='darkgrey',edge.arrow.size=.1,
+#             layout=layout_with_kk(nl_uni_t4), 
+#             main='Friendship Network at A Dutch University\n
+#             Period 4')
 ```
 
 ```{r}
 # the number of ties
-length(as_edgelist(grph))
+length(as_edgelist(nl_uni_t4))
+length(V(nl_uni_t4))
 # the number of nodes that are isolated
 
-paste('The number of individuals that are not connected to any other individuals is', length(isolates(friendship_t1)))
+paste('The number of individuals that are not connected to any other individuals is', length(isolates(friendship_t4)))
 ```
 
 ```{r}
@@ -65,7 +107,7 @@ length(unique(atr$V1)) == nrow(df1)
 # Visualization of node attributes
 
 ```{r}
-V(grph)$name[1:10]
+V(nl_uni_t1)$name[1:10]
 ```
 
 ```{r}
@@ -75,14 +117,31 @@ atr$node_id[1:10]
 ```{r}
 # adding attribute to the exsiting network
  # V2 = gender
-atr[match(V(grph)$name, atr$node_id), ]$V2
+atr[match(V(nl_uni_t1)$name, atr$node_id), ]$V2
 ```
 
 ```{r}
-V(grph)$gender <- atr[match(V(grph)$name, atr$node_id), ]$V2
-plot.igraph(grph,
-            vertex.label= '', vertex.color=ifelse(V(grph)$gender == 1,'royalblue','pink'), #1 = male, 2 = female
+V(nl_uni_t1)$gender <- atr[match(V(nl_uni_t1)$name, atr$node_id), ]$V2
+plot.igraph(nl_uni_t1,
+            vertex.label= '', vertex.color=ifelse(V(nl_uni_t1)$gender == 1,'royalblue','pink'), #1 = male, 2 = female
             edge.color='darkgrey',edge.arrow.size=.2,
-            layout=layout_with_kk(grph),
+            layout=layout_with_kk(nl_uni_t1),
             main='Friendship Network at A Dutch University \nblue: male, pink: female')
+```
+
+```{r}
+V(nl_uni_t4)$gender <- atr[match(V(nl_uni_t4)$name, atr$node_id), ]$V2
+plot.igraph(nl_uni_t4,
+            vertex.label= '', vertex.color=ifelse(V(nl_uni_t4)$gender == 1,'royalblue','pink'), #1 = male, 2 = female
+            edge.color='darkgrey',edge.arrow.size=.2,
+            layout=layout_with_kk(nl_uni_t1),
+            main='Friendship Network at A Dutch University \nblue: male, pink: female')
+```
+
+```{r}
+# if the network is directed
+print(is_directed(nl_uni_t1))
+# average degress of the network 
+avg_in_degree <- mean(igraph::degree(nl_uni_t1, mode = 'in'))
+print(avg_in_degree)
 ```
