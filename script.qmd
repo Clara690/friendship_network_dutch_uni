@@ -14,23 +14,24 @@ excute:
 library(igraph)
 library(dplyr)
 library(sna)
+# for plotting network that contains negative ties
+library(qgraph)
 ```
 
 # Data handling
 
-The data comes in the form of an adjacency format. Thus, it is reasonable to keep its original shape and then turn it into an igraph object.
+The original
 
 ```{r}
 # data collected at the beginning of the study
 
 # load the adjacency matrix 
 df1 <- read.csv('./data/t1.dat', header = FALSE, sep = '')
-df4 <- read.csv('./data/t4.dat.', header = FALSE, sep = '')
-# df1[df1 %in% c(4, 5, 9)] <- 0
-# df4[df4 %in% c(4, 5, 9)] <- 0
-# df4[df4 == 4] <- 0
-# df4[df4 == 9] <- 0
-# converting the label to acual values
+df4 <- read.csv('./data/t4.dat', header = FALSE, sep = '')
+
+# handling missing values
+df1[df1 == 6| df1 == 9] <- NA
+df4[df4 == 6| df4 == 9] <- NA
 
 # attributes 
 atr <- read.csv('./data/cov1.dat', header = FALSE, sep = '') #attached 
@@ -39,20 +40,37 @@ atr$node_id <- colnames(df1)
 
 ```{r}
 # turn original data frame into a matrix
-friendship_t1 <- as.matrix(df1)
-friendship_t4 <- as.matrix(df4)
-friendship_t1[friendship_t1 %in% 1:3] <- 1
-friendship_t4[friendship_t4 %in% 1:3] <- 1
-friendship_t1[friendship_t1 %in% c(4,5,9)] <- 0
-friendship_t4[friendship_t4 %in% c(4,5,9)] <- 0
+mtx_t1 <- as.matrix(df1)
+mtx_t4 <- as.matrix(df4)
+# positive ties 
+mtx_t1[mtx_t1 %in% 1:3] <- 2
+mtx_t4[mtx_t4 %in% 1:3] <- 2
+ # neutral ties
+mtx_t1[mtx_t1 == 4] <- 1
+mtx_t4[mtx_t4 == 4] <- 1
+ # negative ties 
+mtx_t1[mtx_t1 == 5] <- -2
+mtx_t4[mtx_t4 == 5] <- -2
 
 # turn matrix into a graph
-diag(friendship_t1) <- 0 # set the values in diagonal dir to 0 
-diag(friendship_t4) <- 0
-nl_uni_t1 <- graph_from_adjacency_matrix(friendship_t1)
-# nl_uni_t4 <- graph_from_adjacency_matrix(friendship_t4, weight = TRUE)
-nl_uni_t4 <- graph_from_adjacency_matrix(friendship_t4)
+diag(mtx_t1) <- 0 # set the values in diagonal dir to 0 
+diag(mtx_t4) <- 0
+
+nl_uni_t1 <- graph_from_adjacency_matrix(mtx_t1, weight = TRUE)
+nl_uni_t4 <- graph_from_adjacency_matrix(mtx_t4)
+
 print(class(nl_uni_t1))
+```
+
+```{r}
+# fix the node position 
+pos = layout_with_kk(nl_uni_t4)
+# visualization of period 1
+qgraph(mtx_t1, vertex.size = .5, minimum = 1, layout = pos, lengend = TRUE, title = 'Friendship Network at Period 1')
+# visualization of period 4
+qgraph(mtx_t4, vertex.size = .5, minimum = 1, layout = pos,
+       title = 'Friendship Network at Period 4')
+
 ```
 
 ## Network at Time 1
@@ -70,6 +88,13 @@ plot.igraph(nl_uni_t1,
 #| echo: true
 # print(df4[c(11,15,30), 34])
 print(df4[2, 37])
+print(class(df1$V2))
+test_df <- matrix(data =c(1,2,3, 4, 5,4, 5,3,2,1), nrow = 5)
+?as.matrix
+test_df[test_df %in% 4:5] <- 7
+test_df
+
+print(test_df) 
 ```
 
 ## Network at Time 4
@@ -95,7 +120,7 @@ length(as_edgelist(nl_uni_t4))
 length(V(nl_uni_t4))
 # the number of nodes that are isolated
 
-paste('The number of individuals that are not connected to any other individuals is', length(isolates(friendship_t4)))
+paste('The number of individuals that are not connected to any other individuals is', length(isolates(mtx_t4)))
 ```
 
 ```{r}
