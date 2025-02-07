@@ -1,6 +1,6 @@
 ---
-title: "freshmen social network"
-author: "Yun-Tsz Tsai"
+title: "Freshmen Social Network"
+author: "Yun-Tsz Tsai, Nino Janashia"
 format: pdf
 editor: visual
 excute: 
@@ -18,12 +18,14 @@ library(tidyverse)
 # for plotting network that contains negative ties
 library(qgraph)
 ```
+# Introduction 
+This report analyzes the evolution of a friendship network among sociology freshmen at the University of Groningen during 1996-1997. Using network data collected over five time points, this study examines relationships, node-level attributes (e.g., gender, program, smoking behavior), and key network metrics. The analysis applies social network analysis techniques to uncover patterns and insights about the students’ social interactions and dynamics over time (for more details see https://www.stats.ox.ac.uk/~snijders/siena/)."
 
 # Data handling
 
-The original data (a) comes in the format of a matrix, (b) is a realtively small data set with 38 nodes, and therefore I decided to keep it the way it is and do not turn it into an edge list. In addition, the original data contains label that divided the ties between individual into 5 categories, with 1\~3 represent positive relationship, 4 represents neutral, and 5 represents negative ties. After some explorations, for period 4, I only keep the positivve ties for the sake of easier interpretation.
+The original data (a) comes in the format of a matrix, (b) is a realtively small data set with 38 nodes, and therefore we decided to keep it the way it is and analyize the network using adjacency matrix istead of a more memory-efficient edge list. In addition, the original data contains label that divided the ties between individual into 5 categories, with 1~3 represent positive relationship, 4 represents neutral, and 5 represents negative ties. After some explorations, for period 4, we only keep the positivve ties for the sake of easier interpretation.
 
-Since the analysis aims to examine the differences of the friendship network at different periods of time, I do not remove any isolated nodes for comparison.
+Since the analysis aims to examine the differences of the friendship network at different periods of time, we do not remove any isolated nodes for comparison.
 
 ```{r}
 #| echo: false
@@ -94,7 +96,8 @@ plot.igraph(grph4, vertex.label = V(grph4)$name,vertex.size= 4,
 
 ## Descriptive data for the network
 
-The in-degree and out-degree are identical for both networks at time 1 and time 4. However, most figures at time 4 are much higher than those at time 1, except for reciprocity. The density increases slightly from 0.01 to 0.09, meaning that after a certain period of time, individuals in this network have more positive relationship with one another. However, the desity is still low in general.
+The in-degree and out-degree are identical for both networks at time 1 and time 4. However, most figures at time 4 are much higher than those at time 1, except for reciprocity. This might because as the firendship network matured, individuals became more selective and do not recipocate as much comapred to Time 1. 
+The density increases slightly from 0.01 to 0.09, meaning that after a certain period of time, individuals in this network have more positive relationship with one another. However, the desity is still low in general.
 
 ```{r}
 #| echo: false
@@ -202,22 +205,15 @@ hist(sp_t4_out_lengths,
 ```
 
 ```{r}
-#| echo: false
-#| warning: false
-# the number of ties in each network
-length(as_edgelist(grph1)) #38
-length(as_edgelist(grph4)) #258
-# the number of isolated nodes
-length(isolates(mtx_t1)) # 20
-length(isolates(mtx_t4)) # 3
+
 ```
 
-## Descriptive data for nodes level variables
 
 ```{r}
 #| echo: false
 #| warning: false
 library(modelsummary)
+# descriptive information on the node variables
 # V2 = gender
 # V3 = program 
 # V4 = smkoing 
@@ -238,7 +234,8 @@ atr1 <- atr1 %>% mutate(drug = factor(drug, levels = c(0, 1),
 # table
 atr1 %>% 
   datasummary(gender + program + smoke + drug ~ N, 
-              data = .)
+              data = ., 
+              title = 'Descriptive data for nodes level variables')
 ```
 
 # Visualization of node attributes
@@ -274,6 +271,6 @@ cat('EX index at Time 1 = ', assortativity_degree(grph1), '\n')
 cat('EX index at Time 4 = ', assortativity_degree(grph4))
 ```
 
-It looks like as time went by, the tendency of assortativity decreases slightly, with both boys and girls nominating the opposite sex more compared to Time 1.
+It looks like as time went by, the tendency of assortativity decreases slightly, with both boys and girls nominating the opposite sex more compared to Time 1. This shift suggests that while cross-gender friendships remained common, students started forming more gender-homophilous clusters overtime
 
 As for the measurements for robustness and vulnerability of the network, one can use the number of nodes in a network as the denominator and see if removing the node from the graph causes any noticeable impact (e.g. a significant decrease of network density) on the original network structure. If so, increases the numerator by 1 and repeat the process after examining all the nodes.
